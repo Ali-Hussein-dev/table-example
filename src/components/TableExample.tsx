@@ -1,12 +1,4 @@
-import { Table } from "@mantine/core";
-import { useReactTable, flexRender } from "@tanstack/react-table";
-import {
-  createColumnHelper,
-  SortingState,
-  getSortedRowModel,
-  getCoreRowModel,
-  getPaginationRowModel,
-} from "@tanstack/table-core";
+import { Input, Table } from "@mantine/core";
 import {
   BiChevronUp,
   BiChevronDown,
@@ -14,9 +6,44 @@ import {
   BiChevronLeft,
   BiFemale,
   BiMale,
+  BiSearch,
+  BiX,
 } from "react-icons/bi";
 import { TbSelector } from "react-icons/tb";
+import { useReactTable, flexRender, FilterFn } from "@tanstack/react-table";
+import {
+  createColumnHelper,
+  SortingState,
+  getSortedRowModel,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getFilteredRowModel,
+} from "@tanstack/table-core";
 import * as React from "react";
+import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
+
+declare module "@tanstack/table-core" {
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>;
+  }
+  interface FilterMeta {
+    itemRank: RankingInfo;
+  }
+}
+
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value);
+
+  // Store the itemRank info
+  addMeta({
+    itemRank,
+  });
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed;
+};
+
 // Define your row shape
 type RowT = {
   firstname: string;
@@ -54,24 +81,81 @@ const columns = [
     header: "Email",
   }),
 ];
+
+// A debounced input react component
+function DebouncedInput({
+  value: initialValue,
+  onChange,
+  debounce = 300,
+  ...props
+}: {
+  value: string | number;
+  onChange: (value: string | number) => void;
+  debounce?: number;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+  const [value, setValue] = React.useState(initialValue);
+
+  React.useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(value);
+    }, debounce);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <Input
+      value={value}
+      onChange={(e: React.FormEvent<HTMLInputElement>) =>
+        setValue(e.currentTarget.value)
+      }
+      type="text"
+      icon={<BiSearch size={16} />}
+      placeholder="Alle Spalten suchen"
+      rightSection={
+        <button
+          onClick={() => setValue("")}
+          className="w-full h-full col-center"
+        >
+          <BiX size={18} style={{ display: "block", opacity: 0.5 }} />
+          <span className="sr-only">delete</span>
+        </button>
+      }
+    />
+  );
+}
 //======================================
 const TableExample = ({ data }: { data: any[] }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    filterFns: { fuzzy: fuzzyFilter },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: fuzzyFilter,
     // pipeline
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
   const { getHeaderGroups, getRowModel } = table;
   //======================================return
   return (
-    <div className="p-2 pt-4 overflow-hidden bg-white rounded">
+    <div className="p-2 pt-5 overflow-hidden bg-white rounded">
+      <DebouncedInput
+        value={globalFilter ?? ""}
+        onChange={(value) => setGlobalFilter(String(value))}
+      />
       <Table>
         <thead>
           {getHeaderGroups().map((hGroup) => (

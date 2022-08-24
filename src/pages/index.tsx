@@ -7,8 +7,8 @@ import TableExample from "../components/TableExample";
 const Home: NextPage<{ data: Record<string, any>[] }> = ({ data }) => {
   return (
     <section className="grid min-h-screen py-2 bg-gray-200 text-stone-800 place-items-center">
-      <div className="container flex items-start justify-center h-full py-5 mx-auto">
-        <div className="container px-1 space-y-8 max-auto">
+      <div className="container flex items-start justify-center h-full px-2 py-8 mx-auto lg:px-64">
+        <div className="container space-y-4 max-auto ">
           <TableFeats />
           <TableExample data={data} />
         </div>
@@ -20,7 +20,7 @@ const Home: NextPage<{ data: Record<string, any>[] }> = ({ data }) => {
 export default Home;
 
 const getPath = (resource: string) =>
-  `https://fakerapi.it/api/v1/${resource}?_quantity=20`;
+  `https://fakerapi.it/api/v1/${resource}?_quantity=100`;
 
 export const getStaticProps: GetStaticProps = async () => {
   const res = await Promise.all([
