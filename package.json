@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.0",
+    "@emotion/server": "^11.10.0",
     "@headlessui/react": "^1.6.6",
     "@mantine/core": "^5.2.0",
     "@mantine/hooks": "^5.2.0",
+    "@mantine/next": "^5.2.3",
+    "@tanstack/match-sorter-utils": "^8.1.1",
     "@tanstack/react-table": "^8.5.11",
     "daisyui": "^2.22.0",
     "framer-motion": "^7.0.0",
